@@ -1,0 +1,116 @@
+import pygame
+import random
+
+# Initialize pygame
+pygame.init()
+
+# Define screen dimensions
+screen_width = 600
+screen_height = 400
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Mini 2D Game")
+
+# Define colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+
+# Define player properties
+player_width = 50
+player_height = 50
+player_x = screen_width // 2 - player_width // 2
+player_y = screen_height - player_height - 10
+player_velocity = 5
+
+# Define falling block properties
+block_width = 50
+block_height = 50
+block_velocity = 5
+block_frequency = 25
+
+# Create the clock object
+clock = pygame.time.Clock()
+
+# Function to draw the player
+def draw_player(x, y):
+    pygame.draw.rect(screen, RED, (x, y, player_width, player_height))
+
+# Function to draw falling blocks
+def draw_block(x, y):
+    pygame.draw.rect(screen, BLACK, (x, y, block_width, block_height))
+
+# Main game loop
+def game_loop():
+    global player_x
+    player_x_change = 0
+    blocks = []
+
+    # Game loop flag
+    game_running = True
+
+    while game_running:
+        screen.fill(WHITE)
+
+        # Handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_running = False
+
+        # Handle player movement
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            player_x_change = -player_velocity
+        elif keys[pygame.K_RIGHT]:
+            player_x_change = player_velocity
+        else:
+            player_x_change = 0
+
+        player_x += player_x_change
+
+        # Prevent the player from moving off-screen
+        if player_x < 0:
+            player_x = 0
+        if player_x > screen_width - player_width:
+            player_x = screen_width - player_width
+
+        # Generate falling blocks
+        if random.randint(1, block_frequency) == 1:
+            block_x = random.randint(0, screen_width - block_width)
+            blocks.append([block_x, 0])
+
+        # Move and draw falling blocks
+        for block in blocks[:]:
+            block[1] += block_velocity
+            draw_block(block[0], block[1])
+
+            # Check for collisions with player
+            if (block[1] + block_height > player_y and
+                    block[1] < player_y + player_height and
+                    block[0] + block_width > player_x and
+                    block[0] < player_x + player_width):
+                game_running = False  # End game on collision
+
+            if block[1] > screen_height:
+                blocks.remove(block)
+
+        # Draw the player
+        draw_player(player_x, player_y)
+
+        # Update the display
+        pygame.display.update()
+
+        # Control the frame rate
+        clock.tick(60)
+
+    # End game screen
+    font = pygame.font.SysFont(None, 55)
+    game_over_text = font.render("Game Over!", True, RED)
+    screen.fill(WHITE)
+    screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2, screen_height // 2))
+    pygame.display.update()
+    pygame.time.wait(2000)
+
+    pygame.quit()
+
+# Start the game loop
+game_loop()
